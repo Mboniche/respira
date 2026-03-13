@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Respiración Kraus</title>
+
+<style>
+
+body{
+font-family:Arial;
+text-align:center;
+background:linear-gradient(#4facfe,#00f2fe);
+color:white;
+}
+
+.circle{
+width:220px;
+height:220px;
+border-radius:50%;
+background:white;
+color:black;
+margin:auto;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+font-size:40px;
+margin-top:40px;
+transition:transform 1s;
+}
+
+button{
+padding:12px 20px;
+margin:10px;
+border:none;
+border-radius:10px;
+font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Respiración Kraus</h1>
+
+<div>
+
+<button onclick="preset(5,6,5)">5·6·5</button>
+<button onclick="preset(6,7,6)">6·7·6</button>
+<button onclick="preset(7,8,7)">7·8·7</button>
+<button onclick="preset(8,9,8)">8·9·8</button>
+<button onclick="preset(9,10,9)">9·10·9</button>
+
+</div>
+
+<div class="circle" id="circle">
+
+<div id="time">5</div>
+<div id="phase">Respirar</div>
+
+</div>
+
+<p id="cycle">Repetición 1</p>
+
+<button onclick="start()">Empezar</button>
+<button onclick="reset()">Reset</button>
+
+<script>
+
+let inhale=5
+let hold=6
+let exhale=5
+
+let phase="inhale"
+let time=5
+let cycle=1
+let total=10
+let timer
+
+function preset(i,h,e){
+
+inhale=i
+hold=h
+exhale=e
+
+reset()
+
+}
+
+function speak(t){
+
+let u=new SpeechSynthesisUtterance(t)
+u.lang="es"
+speechSynthesis.speak(u)
+
+}
+
+function update(){
+
+document.getElementById("time").innerText=time
+document.getElementById("cycle").innerText="Repetición "+cycle
+
+if(phase==="inhale"){
+document.getElementById("phase").innerText="Respirar"
+circle.style.transform="scale(1.1)"
+}
+
+if(phase==="hold"){
+document.getElementById("phase").innerText="Retener"
+circle.style.transform="scale(1)"
+}
+
+if(phase==="exhale"){
+document.getElementById("phase").innerText="Soltar"
+circle.style.transform="scale(0.9)"
+}
+
+}
+
+function next(){
+
+if(phase==="inhale"){
+phase="hold"
+time=hold
+speak("Retener")
+}
+
+else if(phase==="hold"){
+phase="exhale"
+time=exhale
+speak("Soltar")
+}
+
+else{
+
+cycle++
+
+if(cycle>total){
+alert("Sesión completada")
+reset()
+return
+}
+
+phase="inhale"
+time=inhale
+speak("Respirar")
+
+}
+
+}
+
+function tick(){
+
+time--
+
+if(time<=0){
+next()
+}
+
+update()
+
+}
+
+function start(){
+
+speak("Respirar")
+timer=setInterval(tick,1000)
+
+}
+
+function reset(){
+
+clearInterval(timer)
+
+phase="inhale"
+time=inhale
+cycle=1
+
+update()
+
+}
+
+update()
+
+</script>
+
+</body>
+</html>
