@@ -1,190 +1,345 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Respiración Kraus</title>
 
 <style>
-
 body{
-font-family:Arial;
-text-align:center;
-background:linear-gradient(#4facfe,#00f2fe);
-color:white;
+  font-family:Arial, sans-serif;
+  text-align:center;
+  background:linear-gradient(#4facfe,#00f2fe);
+  color:white;
+  margin:0;
+  padding:20px;
+}
+
+h1{
+  margin-top:10px;
+  margin-bottom:20px;
+}
+
+.presets{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.preset-btn{
+  padding:10px 14px;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  background:white;
+  color:#222;
+}
+
+.preset-btn.active{
+  background:#111;
+  color:white;
+}
+
+.info-box{
+  max-width:360px;
+  margin:0 auto 15px auto;
+  background:rgba(255,255,255,0.18);
+  border-radius:16px;
+  padding:12px;
 }
 
 .circle{
-width:220px;
-height:220px;
-border-radius:50%;
-background:white;
-color:black;
-margin:auto;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-font-size:40px;
-margin-top:40px;
-transition:transform 1s;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  background:white;
+  color:black;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  font-size:44px;
+  margin-top:25px;
+  transition:transform 1s, background 0.5s, color 0.5s;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
-button{
-padding:12px 20px;
-margin:10px;
-border:none;
-border-radius:10px;
-font-size:18px;
+#phase{
+  font-size:22px;
+  margin-top:8px;
 }
 
+#cycle{
+  font-size:20px;
+  margin-top:20px;
+  margin-bottom:8px;
+}
+
+#remaining,
+#level,
+#wakeStatus{
+  margin:6px 0;
+  font-size:16px;
+}
+
+.controls{
+  margin-top:20px;
+}
+
+button.control{
+  padding:12px 20px;
+  margin:10px;
+  border:none;
+  border-radius:12px;
+  font-size:18px;
+}
+
+.start-btn{
+  background:#111;
+  color:white;
+}
+
+.reset-btn{
+  background:white;
+  color:#111;
+}
+
+.small{
+  font-size:14px;
+  opacity:0.95;
+  max-width:380px;
+  margin:15px auto 0 auto;
+  line-height:1.4;
+}
 </style>
-
 </head>
 
 <body>
 
 <h1>Respiración Kraus</h1>
 
-<div>
+<div class="presets">
+  <button id="btn565" class="preset-btn active" onclick="preset(5,6,5,'Nivel 1','Muy fácil','btn565')">5·6·5</button>
+  <button id="btn676" class="preset-btn" onclick="preset(6,7,6,'Nivel 2','Fácil','btn676')">6·7·6</button>
+  <button id="btn787" class="preset-btn" onclick="preset(7,8,7,'Nivel 3','Medio','btn787')">7·8·7</button>
+  <button id="btn898" class="preset-btn" onclick="preset(8,9,8,'Nivel 4','Difícil','btn898')">8·9·8</button>
+  <button id="btn9109" class="preset-btn" onclick="preset(9,10,9,'Nivel 5','Avanzado','btn9109')">9·10·9</button>
+</div>
 
-<button onclick="preset(5,6,5)">5·6·5</button>
-<button onclick="preset(6,7,6)">6·7·6</button>
-<button onclick="preset(7,8,7)">7·8·7</button>
-<button onclick="preset(8,9,8)">8·9·8</button>
-<button onclick="preset(9,10,9)">9·10·9</button>
-
+<div class="info-box">
+  <div id="level">Nivel 1 · Muy fácil</div>
+  <div id="wakeStatus">Pantalla: normal</div>
 </div>
 
 <div class="circle" id="circle">
-
-<div id="time">5</div>
-<div id="phase">Respirar</div>
-
+  <div id="time">5</div>
+  <div id="phase">Respirar</div>
 </div>
 
-<p id="cycle">Repetición 1</p>
+<p id="cycle">Repetición 1 de 10</p>
+<p id="remaining">Faltan 9 repeticiones</p>
 
-<button onclick="start()">Empezar</button>
-<button onclick="reset()">Reset</button>
+<div class="controls">
+  <button class="control start-btn" onclick="start()">Empezar</button>
+  <button class="control reset-btn" onclick="reset()">Detener y reiniciar</button>
+</div>
+
+<p class="small">
+  La app intentará mantener la pantalla encendida mientras esté corriendo. En algunos teléfonos o navegadores puede fallar si el sistema ahorra batería.
+</p>
 
 <script>
+let inhale = 5;
+let hold = 6;
+let exhale = 5;
 
-let inhale=5
-let hold=6
-let exhale=5
+let phase = "inhale";
+let time = 5;
+let cycle = 1;
+let total = 10;
+let timer = null;
+let isRunning = false;
 
-let phase="inhale"
-let time=5
-let cycle=1
-let total=10
-let timer
+let levelName = "Nivel 1";
+let difficulty = "Muy fácil";
 
-function preset(i,h,e){
+let wakeLock = null;
 
-inhale=i
-hold=h
-exhale=e
+const circle = document.getElementById("circle");
 
-reset()
-
+function updatePresetButtons(activeId){
+  const ids = ["btn565","btn676","btn787","btn898","btn9109"];
+  ids.forEach(id => {
+    const btn = document.getElementById(id);
+    if(btn){
+      btn.classList.remove("active");
+    }
+  });
+  const active = document.getElementById(activeId);
+  if(active){
+    active.classList.add("active");
+  }
 }
 
-function speak(t){
+function preset(i, h, e, level, diff, btnId){
+  inhale = i;
+  hold = h;
+  exhale = e;
+  levelName = level;
+  difficulty = diff;
 
-let u=new SpeechSynthesisUtterance(t)
-u.lang="es"
-speechSynthesis.speak(u)
-
+  document.getElementById("level").innerText = levelName + " · " + difficulty;
+  updatePresetButtons(btnId);
+  reset();
 }
+
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "es-ES";
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+async function enableWakeLock(){
+  try{
+    if("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+      document.getElementById("wakeStatus").innerText = "Pantalla: activa";
+
+      wakeLock.addEventListener("release", () => {
+        document.getElementById("wakeStatus").innerText = "Pantalla: normal";
+      });
+    }else{
+      document.getElementById("wakeStatus").innerText = "Pantalla: no compatible";
+    }
+  }catch(error){
+    document.getElementById("wakeStatus").innerText = "Pantalla: no se pudo bloquear";
+  }
+}
+
+async function releaseWakeLock(){
+  try{
+    if(wakeLock){
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  }catch(error){}
+  document.getElementById("wakeStatus").innerText = "Pantalla: normal";
+}
+
+document.addEventListener("visibilitychange", async () => {
+  if(document.visibilityState === "visible" && isRunning){
+    await enableWakeLock();
+  }
+});
 
 function update(){
+  document.getElementById("time").innerText = time;
+  document.getElementById("cycle").innerText = "Repetición " + cycle + " de " + total;
+  document.getElementById("remaining").innerText = "Faltan " + (total - cycle) + " repeticiones";
 
-document.getElementById("time").innerText=time
-document.getElementById("cycle").innerText="Repetición "+cycle
+  if(phase === "inhale"){
+    document.getElementById("phase").innerText = "Respirar";
+    circle.style.transform = "scale(1.10)";
+    circle.style.background = "white";
+    circle.style.color = "black";
+  }
 
-if(phase==="inhale"){
-document.getElementById("phase").innerText="Respirar"
-circle.style.transform="scale(1.1)"
-}
+  if(phase === "hold"){
+    document.getElementById("phase").innerText = "Retener";
+    circle.style.transform = "scale(1)";
+    circle.style.background = "#fff7d6";
+    circle.style.color = "#222";
+  }
 
-if(phase==="hold"){
-document.getElementById("phase").innerText="Retener"
-circle.style.transform="scale(1)"
-}
-
-if(phase==="exhale"){
-document.getElementById("phase").innerText="Soltar"
-circle.style.transform="scale(0.9)"
-}
-
+  if(phase === "exhale"){
+    document.getElementById("phase").innerText = "Soltar";
+    circle.style.transform = "scale(0.9)";
+    circle.style.background = "#d8ffe2";
+    circle.style.color = "#222";
+  }
 }
 
 function next(){
+  if(phase === "inhale"){
+    phase = "hold";
+    time = hold;
+    speak("Retener");
+  }
+  else if(phase === "hold"){
+    phase = "exhale";
+    time = exhale;
+    speak("Soltar");
+  }
+  else{
+    cycle++;
 
-if(phase==="inhale"){
-phase="hold"
-time=hold
-speak("Retener")
-}
+    if(cycle > total){
+      finish();
+      return;
+    }
 
-else if(phase==="hold"){
-phase="exhale"
-time=exhale
-speak("Soltar")
-}
-
-else{
-
-cycle++
-
-if(cycle>total){
-alert("Sesión completada")
-reset()
-return
-}
-
-phase="inhale"
-time=inhale
-speak("Respirar")
-
-}
-
+    phase = "inhale";
+    time = inhale;
+    speak("Respirar");
+  }
 }
 
 function tick(){
+  time--;
 
-time--
+  if(time <= 0){
+    next();
+  }
 
-if(time<=0){
-next()
+  update();
 }
 
-update()
+async function start(){
+  if(isRunning) return;
 
+  isRunning = true;
+  await enableWakeLock();
+  speak(document.getElementById("phase").innerText);
+  timer = setInterval(tick, 1000);
 }
 
-function start(){
+async function reset(){
+  clearInterval(timer);
+  timer = null;
+  isRunning = false;
 
-speak("Respirar")
-timer=setInterval(tick,1000)
+  speechSynthesis.cancel();
+  await releaseWakeLock();
 
+  phase = "inhale";
+  time = inhale;
+  cycle = 1;
+
+  update();
 }
 
-function reset(){
+async function finish(){
+  clearInterval(timer);
+  timer = null;
+  isRunning = false;
 
-clearInterval(timer)
+  speechSynthesis.cancel();
+  await releaseWakeLock();
 
-phase="inhale"
-time=inhale
-cycle=1
-
-update()
-
+  alert("¡Sesión completada!");
+  phase = "inhale";
+  time = inhale;
+  cycle = 1;
+  update();
 }
 
-update()
-
+update();
 </script>
 
 </body>
