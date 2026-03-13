@@ -1,346 +1,888 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Respiración Kraus</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Respiración Kraus</title>
+  <style>
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
 
-<style>
-body{
-  font-family:Arial, sans-serif;
-  text-align:center;
-  background:linear-gradient(#4facfe,#00f2fe);
-  color:white;
-  margin:0;
-  padding:20px;
-}
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      color:white;
+      min-height:100vh;
+      background:linear-gradient(180deg,#4facfe,#00f2fe);
+      transition:background 0.5s ease;
+    }
 
-h1{
-  margin-top:10px;
-  margin-bottom:20px;
-}
+    .app{
+      max-width:460px;
+      margin:0 auto;
+      padding:18px 16px 30px;
+    }
 
-.presets{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:10px;
-  margin-bottom:20px;
-}
+    h1{
+      margin:6px 0 8px;
+      text-align:center;
+      font-size:30px;
+    }
 
-.preset-btn{
-  padding:10px 14px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-  background:white;
-  color:#222;
-}
+    .subtitle{
+      text-align:center;
+      opacity:0.95;
+      margin:0 0 18px;
+      font-size:15px;
+    }
 
-.preset-btn.active{
-  background:#111;
-  color:white;
-}
+    .card{
+      background:rgba(255,255,255,0.18);
+      border:1px solid rgba(255,255,255,0.16);
+      border-radius:22px;
+      padding:14px;
+      backdrop-filter:blur(8px);
+      margin-bottom:14px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.12);
+    }
 
-.info-box{
-  max-width:360px;
-  margin:0 auto 15px auto;
-  background:rgba(255,255,255,0.18);
-  border-radius:16px;
-  padding:12px;
-}
+    .grid{
+      display:grid;
+      gap:10px;
+    }
 
-.circle{
-  width:240px;
-  height:240px;
-  border-radius:50%;
-  background:white;
-  color:black;
-  margin:auto;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  font-size:44px;
-  margin-top:25px;
-  transition:transform 1s, background 0.5s, color 0.5s;
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
-}
+    .preset-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
 
-#phase{
-  font-size:22px;
-  margin-top:8px;
-}
+    .preset-btn{
+      border:none;
+      border-radius:16px;
+      padding:12px 10px;
+      background:white;
+      color:#202020;
+      font-weight:bold;
+      font-size:15px;
+    }
 
-#cycle{
-  font-size:20px;
-  margin-top:20px;
-  margin-bottom:8px;
-}
+    .preset-btn small{
+      display:block;
+      font-size:12px;
+      font-weight:normal;
+      opacity:0.8;
+      margin-top:4px;
+    }
 
-#remaining,
-#level,
-#wakeStatus{
-  margin:6px 0;
-  font-size:16px;
-}
+    .preset-btn.active{
+      background:#111;
+      color:white;
+    }
 
-.controls{
-  margin-top:20px;
-}
+    .top-info{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
 
-button.control{
-  padding:12px 20px;
-  margin:10px;
-  border:none;
-  border-radius:12px;
-  font-size:18px;
-}
+    .mini-box{
+      background:rgba(255,255,255,0.2);
+      border-radius:16px;
+      padding:12px;
+      text-align:center;
+    }
 
-.start-btn{
-  background:#111;
-  color:white;
-}
+    .mini-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      opacity:0.85;
+    }
 
-.reset-btn{
-  background:white;
-  color:#111;
-}
+    .mini-value{
+      font-size:22px;
+      font-weight:bold;
+      margin-top:4px;
+    }
 
-.small{
-  font-size:14px;
-  opacity:0.95;
-  max-width:380px;
-  margin:15px auto 0 auto;
-  line-height:1.4;
-}
-</style>
+    .mini-sub{
+      font-size:13px;
+      opacity:0.92;
+      margin-top:3px;
+    }
+
+    .breath-wrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-top:8px;
+      margin-bottom:8px;
+      min-height:290px;
+    }
+
+    .circle-shell{
+      position:relative;
+      width:280px;
+      height:280px;
+      transition:transform 1s linear;
+    }
+
+    .progress-ring{
+      width:100%;
+      height:100%;
+      transform:rotate(-90deg);
+    }
+
+    .circle-bg{
+      fill:none;
+      stroke:rgba(255,255,255,0.28);
+      stroke-width:14;
+    }
+
+    .circle-progress{
+      fill:none;
+      stroke:white;
+      stroke-width:14;
+      stroke-linecap:round;
+      transition:stroke-dashoffset 0.9s linear;
+    }
+
+    .circle-center{
+      position:absolute;
+      inset:22px;
+      border-radius:50%;
+      background:white;
+      color:#1f1f1f;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      box-shadow:0 12px 25px rgba(0,0,0,0.14);
+      transition:background 0.4s ease, color 0.4s ease;
+    }
+
+    .time{
+      font-size:68px;
+      line-height:1;
+      font-weight:bold;
+    }
+
+    .phase{
+      margin-top:8px;
+      font-size:22px;
+      font-weight:bold;
+    }
+
+    .phase-mini{
+      margin-top:8px;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      opacity:0.72;
+    }
+
+    .center-text{
+      text-align:center;
+    }
+
+    .main-status{
+      font-size:20px;
+      font-weight:bold;
+      margin-top:8px;
+    }
+
+    .sub-status{
+      font-size:15px;
+      opacity:0.95;
+      margin-top:5px;
+    }
+
+    .bars{
+      margin-top:14px;
+    }
+
+    .bar-label{
+      font-size:13px;
+      margin-bottom:6px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .bar{
+      width:100%;
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.25);
+      overflow:hidden;
+      margin-bottom:12px;
+    }
+
+    .bar-fill{
+      height:100%;
+      width:0%;
+      background:white;
+      border-radius:999px;
+      transition:width 0.8s linear;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .control-btn{
+      border:none;
+      border-radius:16px;
+      padding:14px 12px;
+      font-size:17px;
+      font-weight:bold;
+    }
+
+    .start-btn{
+      background:#111;
+      color:white;
+    }
+
+    .reset-btn{
+      background:white;
+      color:#111;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      text-align:center;
+    }
+
+    .stat-num{
+      font-size:24px;
+      font-weight:bold;
+    }
+
+    .stat-text{
+      font-size:12px;
+      opacity:0.9;
+      margin-top:4px;
+    }
+
+    .medals{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .medal{
+      background:rgba(255,255,255,0.2);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+    }
+
+    .note{
+      font-size:13px;
+      line-height:1.45;
+      opacity:0.96;
+      text-align:center;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.68);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:50;
+    }
+
+    .modal.show{
+      display:flex;
+    }
+
+    .modal-card{
+      width:100%;
+      max-width:360px;
+      background:white;
+      color:#222;
+      border-radius:24px;
+      padding:24px 20px;
+      text-align:center;
+      box-shadow:0 20px 40px rgba(0,0,0,0.25);
+    }
+
+    .modal-emoji{
+      font-size:56px;
+    }
+
+    .modal-title{
+      font-size:26px;
+      font-weight:bold;
+      margin-top:10px;
+    }
+
+    .modal-text{
+      margin-top:8px;
+      line-height:1.45;
+    }
+
+    .modal-btn{
+      margin-top:18px;
+      border:none;
+      border-radius:14px;
+      padding:12px 20px;
+      background:#111;
+      color:white;
+      font-size:16px;
+      font-weight:bold;
+    }
+
+    @media (max-width:380px){
+      .preset-grid{
+        grid-template-columns:1fr;
+      }
+      .stats-grid{
+        grid-template-columns:1fr;
+      }
+      .top-info{
+        grid-template-columns:1fr;
+      }
+      .circle-shell{
+        width:250px;
+        height:250px;
+      }
+      .time{
+        font-size:58px;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
+    <h1>Respiración Kraus</h1>
+    <p class="subtitle">Entrena tu respiración con niveles, voz, rachas y medallas</p>
 
-<h1>Respiración Kraus</h1>
+    <div class="card">
+      <div class="preset-grid">
+        <button id="btn565" class="preset-btn active" onclick="setPreset('565')">
+          Nivel 1 · 5·6·5
+          <small>Muy fácil</small>
+        </button>
 
-<div class="presets">
-  <button id="btn565" class="preset-btn active" onclick="preset(5,6,5,'Nivel 1','Muy fácil','btn565')">5·6·5</button>
-  <button id="btn676" class="preset-btn" onclick="preset(6,7,6,'Nivel 2','Fácil','btn676')">6·7·6</button>
-  <button id="btn787" class="preset-btn" onclick="preset(7,8,7,'Nivel 3','Medio','btn787')">7·8·7</button>
-  <button id="btn898" class="preset-btn" onclick="preset(8,9,8,'Nivel 4','Difícil','btn898')">8·9·8</button>
-  <button id="btn9109" class="preset-btn" onclick="preset(9,10,9,'Nivel 5','Avanzado','btn9109')">9·10·9</button>
-</div>
+        <button id="btn676" class="preset-btn" onclick="setPreset('676')">
+          Nivel 2 · 6·7·6
+          <small>Fácil</small>
+        </button>
 
-<div class="info-box">
-  <div id="level">Nivel 1 · Muy fácil</div>
-  <div id="wakeStatus">Pantalla: normal</div>
-</div>
+        <button id="btn787" class="preset-btn" onclick="setPreset('787')">
+          Nivel 3 · 7·8·7
+          <small>Medio</small>
+        </button>
 
-<div class="circle" id="circle">
-  <div id="time">5</div>
-  <div id="phase">Respirar</div>
-</div>
+        <button id="btn898" class="preset-btn" onclick="setPreset('898')">
+          Nivel 4 · 8·9·8
+          <small>Difícil</small>
+        </button>
 
-<p id="cycle">Repetición 1 de 10</p>
-<p id="remaining">Faltan 9 repeticiones</p>
+        <button id="btn9109" class="preset-btn" onclick="setPreset('9109')">
+          Nivel 5 · 9·10·9
+          <small>Avanzado</small>
+        </button>
+      </div>
+    </div>
 
-<div class="controls">
-  <button class="control start-btn" onclick="start()">Empezar</button>
-  <button class="control reset-btn" onclick="reset()">Detener y reiniciar</button>
-</div>
+    <div class="card">
+      <div class="top-info">
+        <div class="mini-box">
+          <div class="mini-label">Nivel actual</div>
+          <div class="mini-value" id="levelName">Nivel 1</div>
+          <div class="mini-sub" id="difficulty">Muy fácil</div>
+        </div>
 
-<p class="small">
-  La app intentará mantener la pantalla encendida mientras esté corriendo. En algunos teléfonos o navegadores puede fallar si el sistema ahorra batería.
-</p>
+        <div class="mini-box">
+          <div class="mini-label">Pantalla</div>
+          <div class="mini-value" id="wakeStatus">Normal</div>
+          <div class="mini-sub" id="patternInfo">5·6·5 · 10 ciclos</div>
+        </div>
+      </div>
 
-<script>
-let inhale = 5;
-let hold = 6;
-let exhale = 5;
+      <div class="breath-wrap">
+        <div class="circle-shell" id="circleShell">
+          <svg class="progress-ring" viewBox="0 0 280 280">
+            <circle class="circle-bg" cx="140" cy="140" r="120"></circle>
+            <circle id="circleProgress" class="circle-progress" cx="140" cy="140" r="120"></circle>
+          </svg>
 
-let phase = "inhale";
-let time = 5;
-let cycle = 1;
-let total = 10;
-let timer = null;
-let isRunning = false;
+          <div class="circle-center" id="circleCenter">
+            <div class="time" id="time">5</div>
+            <div class="phase" id="phase">Respirar</div>
+            <div class="phase-mini" id="phaseMini">Fase actual</div>
+          </div>
+        </div>
+      </div>
 
-let levelName = "Nivel 1";
-let difficulty = "Muy fácil";
+      <div class="center-text">
+        <div class="main-status" id="cycleText">Repetición 1 de 10</div>
+        <div class="sub-status" id="remainingText">Faltan 9 repeticiones</div>
+      </div>
 
-let wakeLock = null;
+      <div class="bars">
+        <div class="bar-label">
+          <span>Progreso de fase</span>
+          <span id="phasePercent">0%</span>
+        </div>
+        <div class="bar">
+          <div id="phaseBar" class="bar-fill"></div>
+        </div>
 
-const circle = document.getElementById("circle");
+        <div class="bar-label">
+          <span>Progreso total</span>
+          <span id="totalPercent">0%</span>
+        </div>
+        <div class="bar">
+          <div id="totalBar" class="bar-fill"></div>
+        </div>
+      </div>
 
-function updatePresetButtons(activeId){
-  const ids = ["btn565","btn676","btn787","btn898","btn9109"];
-  ids.forEach(id => {
-    const btn = document.getElementById(id);
-    if(btn){
-      btn.classList.remove("active");
+      <div class="controls">
+        <button class="control-btn start-btn" id="startBtn" onclick="startSession()">Empezar</button>
+        <button class="control-btn reset-btn" onclick="resetSession()">Detener y reiniciar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stats-grid">
+        <div class="mini-box">
+          <div class="stat-num" id="sessionsStat">0</div>
+          <div class="stat-text">Sesiones</div>
+        </div>
+
+        <div class="mini-box">
+          <div class="stat-num" id="streakStat">0</div>
+          <div class="stat-text">Racha</div>
+        </div>
+
+        <div class="mini-box">
+          <div class="stat-num" id="minutesStat">0</div>
+          <div class="stat-text">Minutos</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;font-weight:bold;">Medallas</div>
+      <div class="medals" id="medalsList"></div>
+    </div>
+
+    <div class="card">
+      <div class="note">
+        La app intentará mantener la pantalla encendida mientras corre. En algunos celulares el sistema puede soltar ese permiso por ahorro de batería. Si la pantalla se apaga, vuelve a abrir la app y toca <b>Empezar</b>.
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="medalModal">
+    <div class="modal-card">
+      <div class="modal-emoji">🏆</div>
+      <div class="modal-title">Nueva medalla</div>
+      <div class="modal-text" id="medalModalText">Has desbloqueado una medalla</div>
+      <button class="modal-btn" onclick="closeMedalModal()">Continuar</button>
+    </div>
+  </div>
+
+  <script>
+    const PRESETS = {
+      "565": { inhale: 5, hold: 6, exhale: 5, cycles: 10, level: "Nivel 1", difficulty: "Muy fácil" },
+      "676": { inhale: 6, hold: 7, exhale: 6, cycles: 10, level: "Nivel 2", difficulty: "Fácil" },
+      "787": { inhale: 7, hold: 8, exhale: 7, cycles: 10, level: "Nivel 3", difficulty: "Medio" },
+      "898": { inhale: 8, hold: 9, exhale: 8, cycles: 10, level: "Nivel 4", difficulty: "Difícil" },
+      "9109": { inhale: 9, hold: 10, exhale: 9, cycles: 10, level: "Nivel 5", difficulty: "Avanzado" }
+    };
+
+    const MEDAL_DEFS = [
+      { id: "first", name: "🌱 Primer Aliento", check: stats => stats.sessions >= 1 },
+      { id: "three", name: "🌿 Constancia", check: stats => stats.streak >= 3 },
+      { id: "seven", name: "🌬️ Maestro del Aire", check: stats => stats.streak >= 7 },
+      { id: "thirty", name: "👑 Maestro Kraus", check: stats => stats.streak >= 30 },
+      { id: "lvl3", name: "🟣 Nivel Medio", check: stats => stats.bestLevel >= 3 },
+      { id: "lvl5", name: "🏅 Nivel Avanzado", check: stats => stats.bestLevel >= 5 }
+    ];
+
+    let presetKey = "565";
+    let inhale = PRESETS[presetKey].inhale;
+    let hold = PRESETS[presetKey].hold;
+    let exhale = PRESETS[presetKey].exhale;
+    let totalCycles = PRESETS[presetKey].cycles;
+
+    let phase = "inhale";
+    let time = inhale;
+    let cycle = 1;
+    let timer = null;
+    let isRunning = false;
+    let wakeLock = null;
+
+    const circleProgress = document.getElementById("circleProgress");
+    const circleShell = document.getElementById("circleShell");
+    const circleCenter = document.getElementById("circleCenter");
+    const radius = 120;
+    const circumference = 2 * Math.PI * radius;
+
+    circleProgress.style.strokeDasharray = circumference;
+    circleProgress.style.strokeDashoffset = circumference;
+
+    function getStats(){
+      const raw = localStorage.getItem("krausStats");
+      if(raw){
+        try{
+          const parsed = JSON.parse(raw);
+          return {
+            sessions: parsed.sessions || 0,
+            streak: parsed.streak || 0,
+            totalMinutes: parsed.totalMinutes || 0,
+            medals: parsed.medals || [],
+            bestLevel: parsed.bestLevel || 1,
+            lastDate: parsed.lastDate || null
+          };
+        }catch(e){}
+      }
+      return {
+        sessions: 0,
+        streak: 0,
+        totalMinutes: 0,
+        medals: [],
+        bestLevel: 1,
+        lastDate: null
+      };
     }
-  });
-  const active = document.getElementById(activeId);
-  if(active){
-    active.classList.add("active");
-  }
-}
 
-function preset(i, h, e, level, diff, btnId){
-  inhale = i;
-  hold = h;
-  exhale = e;
-  levelName = level;
-  difficulty = diff;
+    function saveStats(stats){
+      localStorage.setItem("krausStats", JSON.stringify(stats));
+    }
 
-  document.getElementById("level").innerText = levelName + " · " + difficulty;
-  updatePresetButtons(btnId);
-  reset();
-}
+    function todayString(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
 
-function speak(text){
-  if(!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "es-ES";
-  u.rate = 0.9;
-  speechSynthesis.speak(u);
-}
+    function dayDiff(a, b){
+      const da = new Date(a + "T00:00:00");
+      const db = new Date(b + "T00:00:00");
+      return Math.round((db - da) / 86400000);
+    }
 
-async function enableWakeLock(){
-  try{
-    if("wakeLock" in navigator){
-      wakeLock = await navigator.wakeLock.request("screen");
-      document.getElementById("wakeStatus").innerText = "Pantalla: activa";
+    function currentLevelNumber(){
+      if(presetKey === "565") return 1;
+      if(presetKey === "676") return 2;
+      if(presetKey === "787") return 3;
+      if(presetKey === "898") return 4;
+      if(presetKey === "9109") return 5;
+      return 1;
+    }
 
-      wakeLock.addEventListener("release", () => {
-        document.getElementById("wakeStatus").innerText = "Pantalla: normal";
+    function renderStats(){
+      const stats = getStats();
+      document.getElementById("sessionsStat").innerText = stats.sessions;
+      document.getElementById("streakStat").innerText = stats.streak;
+      document.getElementById("minutesStat").innerText = stats.totalMinutes;
+
+      const medalsList = document.getElementById("medalsList");
+      medalsList.innerHTML = "";
+
+      if(!stats.medals.length){
+        medalsList.innerHTML = '<div class="medal">Aún no tienes medallas</div>';
+        return;
+      }
+
+      stats.medals.forEach(id => {
+        const def = MEDAL_DEFS.find(m => m.id === id);
+        const div = document.createElement("div");
+        div.className = "medal";
+        div.innerText = def ? def.name : id;
+        medalsList.appendChild(div);
       });
-    }else{
-      document.getElementById("wakeStatus").innerText = "Pantalla: no compatible";
-    }
-  }catch(error){
-    document.getElementById("wakeStatus").innerText = "Pantalla: no se pudo bloquear";
-  }
-}
-
-async function releaseWakeLock(){
-  try{
-    if(wakeLock){
-      await wakeLock.release();
-      wakeLock = null;
-    }
-  }catch(error){}
-  document.getElementById("wakeStatus").innerText = "Pantalla: normal";
-}
-
-document.addEventListener("visibilitychange", async () => {
-  if(document.visibilityState === "visible" && isRunning){
-    await enableWakeLock();
-  }
-});
-
-function update(){
-  document.getElementById("time").innerText = time;
-  document.getElementById("cycle").innerText = "Repetición " + cycle + " de " + total;
-  document.getElementById("remaining").innerText = "Faltan " + (total - cycle) + " repeticiones";
-
-  if(phase === "inhale"){
-    document.getElementById("phase").innerText = "Respirar";
-    circle.style.transform = "scale(1.10)";
-    circle.style.background = "white";
-    circle.style.color = "black";
-  }
-
-  if(phase === "hold"){
-    document.getElementById("phase").innerText = "Retener";
-    circle.style.transform = "scale(1)";
-    circle.style.background = "#fff7d6";
-    circle.style.color = "#222";
-  }
-
-  if(phase === "exhale"){
-    document.getElementById("phase").innerText = "Soltar";
-    circle.style.transform = "scale(0.9)";
-    circle.style.background = "#d8ffe2";
-    circle.style.color = "#222";
-  }
-}
-
-function next(){
-  if(phase === "inhale"){
-    phase = "hold";
-    time = hold;
-    speak("Retener");
-  }
-  else if(phase === "hold"){
-    phase = "exhale";
-    time = exhale;
-    speak("Soltar");
-  }
-  else{
-    cycle++;
-
-    if(cycle > total){
-      finish();
-      return;
     }
 
-    phase = "inhale";
-    time = inhale;
-    speak("Respirar");
-  }
-}
+    function showMedalModal(text){
+      document.getElementById("medalModalText").innerText = text;
+      document.getElementById("medalModal").classList.add("show");
+    }
 
-function tick(){
-  time--;
+    function closeMedalModal(){
+      document.getElementById("medalModal").classList.remove("show");
+    }
 
-  if(time <= 0){
-    next();
-  }
+    function unlockNewMedals(stats){
+      const newOnes = [];
+      MEDAL_DEFS.forEach(def => {
+        if(!stats.medals.includes(def.id) && def.check(stats)){
+          stats.medals.push(def.id);
+          newOnes.push(def.name);
+        }
+      });
+      return newOnes;
+    }
 
-  update();
-}
+    function updatePresetButtons(){
+      const ids = ["btn565","btn676","btn787","btn898","btn9109"];
+      ids.forEach(id => document.getElementById(id).classList.remove("active"));
+      document.getElementById("btn" + presetKey).classList.add("active");
+    }
 
-async function start(){
-  if(isRunning) return;
+    function applyPresetToUI(){
+      const preset = PRESETS[presetKey];
+      document.getElementById("levelName").innerText = preset.level;
+      document.getElementById("difficulty").innerText = preset.difficulty;
+      document.getElementById("patternInfo").innerText = `${preset.inhale}·${preset.hold}·${preset.exhale} · ${preset.cycles} ciclos`;
+      updatePresetButtons();
+    }
 
-  isRunning = true;
-  await enableWakeLock();
-  speak(document.getElementById("phase").innerText);
-  timer = setInterval(tick, 1000);
-}
+    function setPreset(key){
+      presetKey = key;
+      inhale = PRESETS[key].inhale;
+      hold = PRESETS[key].hold;
+      exhale = PRESETS[key].exhale;
+      totalCycles = PRESETS[key].cycles;
+      applyPresetToUI();
+      resetSession();
+    }
 
-async function reset(){
-  clearInterval(timer);
-  timer = null;
-  isRunning = false;
+    function speak(text){
+      if(!("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "es-ES";
+      u.rate = 0.92;
+      speechSynthesis.speak(u);
+    }
 
-  speechSynthesis.cancel();
-  await releaseWakeLock();
+    async function enableWakeLock(){
+      try{
+        if("wakeLock" in navigator){
+          wakeLock = await navigator.wakeLock.request("screen");
+          document.getElementById("wakeStatus").innerText = "Activa";
 
-  phase = "inhale";
-  time = inhale;
-  cycle = 1;
+          wakeLock.addEventListener("release", () => {
+            document.getElementById("wakeStatus").innerText = "Normal";
+          });
+        }else{
+          document.getElementById("wakeStatus").innerText = "No compatible";
+        }
+      }catch(e){
+        document.getElementById("wakeStatus").innerText = "No se pudo";
+      }
+    }
 
-  update();
-}
+    async function releaseWakeLock(){
+      try{
+        if(wakeLock){
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      }catch(e){}
+      document.getElementById("wakeStatus").innerText = "Normal";
+    }
 
-async function finish(){
-  clearInterval(timer);
-  timer = null;
-  isRunning = false;
+    document.addEventListener("visibilitychange", async () => {
+      if(document.visibilityState === "visible" && isRunning){
+        await enableWakeLock();
+      }
+    });
 
-  speechSynthesis.cancel();
-  await releaseWakeLock();
+    function phaseDuration(){
+      if(phase === "inhale") return inhale;
+      if(phase === "hold") return hold;
+      return exhale;
+    }
 
-  alert("¡Sesión completada!");
-  phase = "inhale";
-  time = inhale;
-  cycle = 1;
-  update();
-}
+    function phaseLabel(){
+      if(phase === "inhale") return "Respirar";
+      if(phase === "hold") return "Retener";
+      return "Soltar";
+    }
 
-update();
-</script>
+    function updateCircleStyle(){
+      if(phase === "inhale"){
+        circleShell.style.transform = "scale(1.12)";
+        circleCenter.style.background = "white";
+        circleCenter.style.color = "#202020";
+        document.body.style.background = "linear-gradient(180deg,#4facfe,#00f2fe)";
+      }
 
+      if(phase === "hold"){
+        circleShell.style.transform = "scale(1)";
+        circleCenter.style.background = "#fff6cc";
+        circleCenter.style.color = "#202020";
+        document.body.style.background = "linear-gradient(180deg,#f6d365,#fda085)";
+      }
+
+      if(phase === "exhale"){
+        circleShell.style.transform = "scale(0.9)";
+        circleCenter.style.background = "#d8ffe2";
+        circleCenter.style.color = "#202020";
+        document.body.style.background = "linear-gradient(180deg,#43e97b,#38f9d7)";
+      }
+    }
+
+    function updateProgress(){
+      const currentPhaseDuration = phaseDuration();
+      const phaseElapsed = currentPhaseDuration - time;
+      const phasePercent = Math.max(0, Math.min(100, (phaseElapsed / currentPhaseDuration) * 100));
+
+      const totalSteps = totalCycles * 3;
+      let phaseIndex = 0;
+      if(phase === "inhale") phaseIndex = 0;
+      if(phase === "hold") phaseIndex = 1;
+      if(phase === "exhale") phaseIndex = 2;
+
+      const totalPercent = Math.max(0, Math.min(100, (((cycle - 1) * 3 + phaseIndex) / totalSteps) * 100));
+
+      document.getElementById("phaseBar").style.width = phasePercent + "%";
+      document.getElementById("totalBar").style.width = totalPercent + "%";
+      document.getElementById("phasePercent").innerText = Math.round(phasePercent) + "%";
+      document.getElementById("totalPercent").innerText = Math.round(totalPercent) + "%";
+
+      const offset = circumference - (phasePercent / 100) * circumference;
+      circleProgress.style.strokeDashoffset = offset;
+    }
+
+    function updateUI(){
+      document.getElementById("time").innerText = time;
+      document.getElementById("phase").innerText = phaseLabel();
+      document.getElementById("cycleText").innerText = `Repetición ${cycle} de ${totalCycles}`;
+      document.getElementById("remainingText").innerText = `Faltan ${Math.max(0, totalCycles - cycle)} repeticiones`;
+      document.getElementById("startBtn").innerText = isRunning ? "En marcha" : "Empezar";
+      updateCircleStyle();
+      updateProgress();
+    }
+
+    function goNextPhase(){
+      if(phase === "inhale"){
+        phase = "hold";
+        time = hold;
+        speak("Retener");
+        updateUI();
+        return;
+      }
+
+      if(phase === "hold"){
+        phase = "exhale";
+        time = exhale;
+        speak("Soltar");
+        updateUI();
+        return;
+      }
+
+      cycle++;
+
+      if(cycle > totalCycles){
+        finishSession();
+        return;
+      }
+
+      phase = "inhale";
+      time = inhale;
+      speak("Respirar");
+      updateUI();
+    }
+
+    function tick(){
+      time--;
+
+      if(time <= 0){
+        goNextPhase();
+      }else{
+        updateUI();
+      }
+    }
+
+    async function startSession(){
+      if(isRunning) return;
+
+      isRunning = true;
+      document.getElementById("startBtn").innerText = "En marcha";
+      await enableWakeLock();
+      speak(phaseLabel());
+      timer = setInterval(tick, 1000);
+    }
+
+    async function resetSession(){
+      clearInterval(timer);
+      timer = null;
+      isRunning = false;
+      speechSynthesis.cancel();
+      await releaseWakeLock();
+
+      phase = "inhale";
+      time = inhale;
+      cycle = 1;
+
+      updateUI();
+    }
+
+    function registerCompletedSession(){
+      const stats = getStats();
+      const today = todayString();
+
+      if(stats.lastDate){
+        const diff = dayDiff(stats.lastDate, today);
+        if(diff === 1){
+          stats.streak += 1;
+        }else if(diff === 0){
+          // mismo día: no sube racha, pero sí suma sesión
+        }else{
+          stats.streak = 1;
+        }
+      }else{
+        stats.streak = 1;
+      }
+
+      stats.sessions += 1;
+      stats.totalMinutes += Math.round((inhale + hold + exhale) * totalCycles / 60);
+
+      if(currentLevelNumber() > stats.bestLevel){
+        stats.bestLevel = currentLevelNumber();
+      }
+
+      stats.lastDate = today;
+
+      const unlocked = unlockNewMedals(stats);
+      saveStats(stats);
+      renderStats();
+
+      if(unlocked.length){
+        showMedalModal("Ganaste: " + unlocked.join(", "));
+      }else{
+        showMedalModal("¡Sesión completada! Sigue así.");
+      }
+    }
+
+    async function finishSession(){
+      clearInterval(timer);
+      timer = null;
+      isRunning = false;
+      speechSynthesis.cancel();
+      await releaseWakeLock();
+
+      registerCompletedSession();
+
+      phase = "inhale";
+      time = inhale;
+      cycle = 1;
+      updateUI();
+    }
+
+    applyPresetToUI();
+    renderStats();
+    updateUI();
+  </script>
 </body>
 </html>
